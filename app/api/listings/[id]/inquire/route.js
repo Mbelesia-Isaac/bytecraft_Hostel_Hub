@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
+import { rateLimit } from "@/lib/rateLimit";
 
 function toInternationalKenyanFormat(phone) {
   const digits = phone.replace(/\D/g, "");
   if (digits.startsWith("254")) return digits;
   if (digits.startsWith("0")) return `254${digits.slice(1)}`;
-  return digits; // fallback: assume already correct
+  return digits;
 }
 
 export async function POST(req, { params }) {
@@ -15,6 +16,14 @@ export async function POST(req, { params }) {
     return NextResponse.json(
       { error: "Create a free account to contact landlords." },
       { status: 403 }
+    );
+  }
+
+  const limit = rateLimit(`inquire:${authUser.id}`, { max: 10, windowMs: 60 * 60 * 1000 });
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many inquiries sent. Try again later." },
+      { status: 429 }
     );
   }
 

@@ -50,35 +50,35 @@ model User {
   isVerified   Boolean  @default(false)
   createdAt    DateTime @default(now())
 
-  listings      Listing[]      @relation("LandlordListings")
-  inquiriesSent Inquiry[]      @relation("SeekerInquiries")
-  reviews       Review[]
-  savedListings SavedListing[]
-  reviewedListings Listing[] @relation("ListingReviewer")
+  listings         Listing[]      @relation("LandlordListings")
+  inquiriesSent    Inquiry[]      @relation("SeekerInquiries")
+  reviews          Review[]
+  savedListings    SavedListing[]
+  reviewedListings Listing[]      @relation("ListingReviewer")
 
   @@map("users")
 }
 
 model Listing {
-  id           String        @id @default(uuid())
-  landlordId   String
-  landlord     User          @relation("LandlordListings", fields: [landlordId], references: [id])
-  title        String
-  description  String
-  propertyType PropertyType
-  price        Decimal       @db.Decimal(10, 2)
-  county       String
-  area         String
-  landmark     String?
-  latitude     Decimal?      @db.Decimal(9, 6)
-  longitude    Decimal?      @db.Decimal(9, 6)
-  status       ListingStatus @default(PENDING)
+  id              String        @id @default(uuid())
+  landlordId      String
+  landlord        User          @relation("LandlordListings", fields: [landlordId], references: [id])
+  title           String
+  description     String
+  propertyType    PropertyType
+  price           Decimal       @db.Decimal(10, 2)
+  county          String
+  area            String
+  landmark        String?
+  latitude        Decimal?      @db.Decimal(9, 6)
+  longitude       Decimal?      @db.Decimal(9, 6)
+  status          ListingStatus @default(PENDING)
   rejectionReason String?
   reviewedById    String?
   reviewedBy      User?         @relation("ListingReviewer", fields: [reviewedById], references: [id])
   reviewedAt      DateTime?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   photos    Photo[]
   inquiries Inquiry[]
@@ -89,6 +89,8 @@ model Listing {
   @@map("listings")
   @@index([county, area])
   @@index([status])
+  @@index([landlordId])
+  @@index([reviewedById])
 }
 
 model Photo {
@@ -99,6 +101,7 @@ model Photo {
   sortOrder Int     @default(0)
 
   @@map("photos")
+  @@index([listingId])
 }
 
 model Inquiry {
@@ -111,6 +114,8 @@ model Inquiry {
   createdAt DateTime @default(now())
 
   @@map("inquiries")
+  @@index([listingId])
+  @@index([seekerId])
 }
 
 model Review {
@@ -124,6 +129,8 @@ model Review {
   createdAt DateTime @default(now())
 
   @@map("reviews")
+  @@index([listingId])
+  @@index([seekerId])
 }
 
 model SavedListing {
@@ -135,6 +142,7 @@ model SavedListing {
 
   @@unique([seekerId, listingId])
   @@map("saved_listings")
+  @@index([listingId])
 }
 
 model Payment {
@@ -147,4 +155,5 @@ model Payment {
   createdAt DateTime       @default(now())
 
   @@map("payments")
+  @@index([listingId])
 }
