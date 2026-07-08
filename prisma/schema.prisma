@@ -54,6 +54,7 @@ model User {
   inquiriesSent Inquiry[]      @relation("SeekerInquiries")
   reviews       Review[]
   savedListings SavedListing[]
+  reviewedListings Listing[] @relation("ListingReviewer")
 
   @@map("users")
 }
@@ -73,6 +74,9 @@ model Listing {
   longitude    Decimal?      @db.Decimal(9, 6)
   status       ListingStatus @default(PENDING)
   rejectionReason String?
+  reviewedById    String?
+  reviewedBy      User?         @relation("ListingReviewer", fields: [reviewedById], references: [id])
+  reviewedAt      DateTime?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 

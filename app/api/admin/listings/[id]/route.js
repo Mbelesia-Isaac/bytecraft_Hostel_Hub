@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
 
-// PATCH /api/admin/listings/:id — approve or reject, admin only
 export async function PATCH(req, { params }) {
   const authUser = getUserFromRequest(req);
 
@@ -26,11 +25,23 @@ export async function PATCH(req, { params }) {
       data: {
         status,
         rejectionReason: status === "REJECTED" ? rejectionReason || "Not specified" : null,
+        reviewedById: authUser.id,
+        reviewedAt: new Date(),
+      },
+      include: {
+        reviewedBy: { select: { fullName: true, email: true } },
       },
     });
     return NextResponse.json({ listing });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Listing not found." }, { status: 404 });
+    console.error("Admin listing update failed:", err);
+    if (err.code === "P2025") {
+      // Prisma's actual "record not found" error code
+      return NextResponse.json({ error: "Listing not found." }, { status: 404 });
+    }
+    return NextResponse.json(
+      { error: "Something went wrong updating the listing.", detail: err.message },
+      { status: 500 }
+    );
   }
 }
