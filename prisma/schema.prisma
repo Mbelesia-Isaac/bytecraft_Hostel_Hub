@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SEEKER
+  LANDLORD
+  ADMIN
+}
+
+enum PropertyType {
+  BEDSITTER
+  HOSTEL_ROOM
+  ONE_BEDROOM
+  TWO_BEDROOM
+  APARTMENT
+  BUNGALOW
+}
+
+enum ListingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  TAKEN
+}
+
+enum PaymentPurpose {
+  FEATURED_LISTING
+  VERIFICATION_FEE
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  fullName     String
+  email        String   @unique
+  phone        String   @unique
+  passwordHash String
+  role         Role     @default(SEEKER)
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  listings      Listing[]      @relation("LandlordListings")
+  inquiriesSent Inquiry[]      @relation("SeekerInquiries")
+  reviews       Review[]
+  savedListings SavedListing[]
+
+  @@map("users")
+}
+
+model Listing {
+  id           String        @id @default(uuid())
+  landlordId   String
+  landlord     User          @relation("LandlordListings", fields: [landlordId], references: [id])
+  title        String
+  description  String
+  propertyType PropertyType
+  price        Decimal       @db.Decimal(10, 2)
+  county       String
+  area         String
+  landmark     String?
+  latitude     Decimal?      @db.Decimal(9, 6)
+  longitude    Decimal?      @db.Decimal(9, 6)
+  status       ListingStatus @default(PENDING)
+  rejectionReason String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  photos    Photo[]
+  inquiries Inquiry[]
+  reviews   Review[]
+  savedBy   SavedListing[]
+  payments  Payment[]
+
+  @@map("listings")
+  @@index([county, area])
+  @@index([status])
+}
+
+model Photo {
+  id        String  @id @default(uuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  url       String
+  sortOrder Int     @default(0)
+
+  @@map("photos")
+}
+
+model Inquiry {
+  id        String   @id @default(uuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  seekerId  String
+  seeker    User     @relation("SeekerInquiries", fields: [seekerId], references: [id])
+  message   String
+  createdAt DateTime @default(now())
+
+  @@map("inquiries")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  seekerId  String
+  seeker    User     @relation(fields: [seekerId], references: [id])
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@map("reviews")
+}
+
+model SavedListing {
+  id        String  @id @default(uuid())
+  seekerId  String
+  seeker    User    @relation(fields: [seekerId], references: [id])
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([seekerId, listingId])
+  @@map("saved_listings")
+}
+
+model Payment {
+  id        String         @id @default(uuid())
+  listingId String
+  listing   Listing        @relation(fields: [listingId], references: [id])
+  amount    Decimal        @db.Decimal(10, 2)
+  purpose   PaymentPurpose
+  status    PaymentStatus  @default(PENDING)
+  createdAt DateTime       @default(now())
+
+  @@map("payments")
+}
