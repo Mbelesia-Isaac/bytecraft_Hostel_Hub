@@ -40,6 +40,12 @@ enum PaymentStatus {
   FAILED
 }
 
+enum ReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+}
+
 model User {
   id           String   @id @default(uuid())
   fullName     String
@@ -55,6 +61,7 @@ model User {
   reviews          Review[]
   savedListings    SavedListing[]
   reviewedListings Listing[]      @relation("ListingReviewer")
+  reportsFiled     Report[]       @relation("ReportsFiled")
 
   @@map("users")
 }
@@ -85,6 +92,7 @@ model Listing {
   reviews   Review[]
   savedBy   SavedListing[]
   payments  Payment[]
+  reports   Report[]
 
   @@map("listings")
   @@index([county, area])
@@ -156,4 +164,19 @@ model Payment {
 
   @@map("payments")
   @@index([listingId])
+}
+
+model Report {
+  id         String       @id @default(uuid())
+  listingId  String
+  listing    Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User         @relation("ReportsFiled", fields: [reporterId], references: [id])
+  reason     String
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+
+  @@map("reports")
+  @@index([listingId])
+  @@index([status])
 }
