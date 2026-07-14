@@ -16,10 +16,7 @@ export default function LandlordPendingPage() {
           for seekers. This usually takes less than a day. We&apos;ll let you
           know once you&apos;re approved and can start listing properties.
         </p>
-        
-          href="/"
-          className="inline-block bg-[#2568A8] text-white text-sm font-medium rounded-md px-4 py-2"
-        >
+        <a href="/" className="inline-block bg-[#2568A8] text-white text-sm font-medium rounded-md px-4 py-2">
           Back to homepage
         </a>
       </div>
