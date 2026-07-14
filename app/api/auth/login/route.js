@@ -24,10 +24,22 @@ export async function POST(req) {
       );
     }
 
+    if (user.accountStatus === "SUSPENDED") {
+      return NextResponse.json(
+        { error: "This account has been suspended. Contact support if you think this is a mistake." },
+        { status: 403 }
+      );
+    }
+
     const token = signToken(user);
     return NextResponse.json({
       token,
-      user: { id: user.id, fullName: user.fullName, role: user.role },
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        role: user.role,
+        accountStatus: user.accountStatus,
+      },
     });
   } catch (err) {
     console.error(err);

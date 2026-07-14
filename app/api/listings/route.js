@@ -49,6 +49,20 @@ export async function POST(req) {
     );
   }
 
+  const dbUser = await prisma.user.findUnique({ where: { id: authUser.id } });
+  if (dbUser?.accountStatus === "PENDING") {
+    return NextResponse.json(
+      { error: "Your landlord account is awaiting admin approval before you can list properties." },
+      { status: 403 }
+    );
+  }
+  if (dbUser?.accountStatus === "SUSPENDED") {
+    return NextResponse.json(
+      { error: "Your account has been suspended." },
+      { status: 403 }
+    );
+  }
+
   try {
     const body = await req.json();
 

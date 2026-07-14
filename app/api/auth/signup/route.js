@@ -42,6 +42,9 @@ export async function POST(req) {
 
     const allowedRoles = ["SEEKER", "LANDLORD"];
     const finalRole = allowedRoles.includes(role) ? role : "SEEKER";
+    // Landlords need admin approval before their account is active;
+    // seekers can browse and contact landlords immediately.
+    const accountStatus = finalRole === "LANDLORD" ? "PENDING" : "ACTIVE";
 
     const existing = await prisma.user.findFirst({
       where: { OR: [{ email }, { phone }] },
@@ -60,13 +63,19 @@ export async function POST(req) {
         phone,
         passwordHash: hashPassword(password),
         role: finalRole,
+        accountStatus,
       },
     });
 
     const token = signToken(user);
     return NextResponse.json({
       token,
-      user: { id: user.id, fullName: user.fullName, role: user.role },
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        role: user.role,
+        accountStatus: user.accountStatus,
+      },
     });
   } catch (err) {
     console.error(err);
